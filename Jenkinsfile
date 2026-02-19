@@ -16,10 +16,18 @@ pipeline {
             steps {
                 sh '''
                 docker network create app-network || true
+
                 docker rm -f backend1 backend2 || true
 
-                docker run -d --name backend1 --network app-network backend-app
-                docker run -d --name backend2 --network app-network backend-app
+                docker run -d \
+                  --name backend1 \
+                  --network app-network \
+                  backend-app
+
+                docker run -d \
+                  --name backend2 \
+                  --network app-network \
+                  backend-app
                 '''
             }
         }
@@ -33,7 +41,7 @@ pipeline {
                   --name nginx-lb \
                   --network app-network \
                   -p 80:80 \
-                  -v $(pwd)/nginx/default.conf:/etc/nginx/conf.d/default.conf \
+                  -v $(pwd)/nginx:/etc/nginx/conf.d \
                   nginx
                 '''
             }
@@ -42,10 +50,10 @@ pipeline {
 
     post {
         success {
-            echo 'Pipeline executed successfully. NGINX load balancer is running.'
+            echo 'Pipeline executed successfully. Backend and NGINX load balancer are running.'
         }
         failure {
-            echo 'Pipeline failed. Check console logs for errors.'
+            echo 'Pipeline failed. Check console output for errors.'
         }
     }
 }
